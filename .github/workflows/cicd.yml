@@ -11,6 +11,7 @@ jobs:
     env:
       REGION                   : ap-singapore-1
       COMPARTMENT_NAME         : development-demo
+      K8S_CLUSTER_NAME         : DevOps (TvZV)
       APP_PREFIX               : device-api
       APP_NAMESPACE            : dev
       APP_REPLICAS             : 3
@@ -43,6 +44,11 @@ jobs:
           oci setup repair-file-permissions --file ~/.oci/config
           oci setup repair-file-permissions --file ~/.oci/key.pem
           echo "COMPARTMENT_OCID=$(oci iam compartment list | python3 -c "import sys, json; print(json.dumps([x for x in json.load(sys.stdin)['data'] if x['name'] == '${{ env.COMPARTMENT_NAME }}']))"| jq '.[0].id')" >> $GITHUB_ENV
+      - name: 'Get OKE cluster ID'
+        run: |
+          oci setup repair-file-permissions --file ~/.oci/config
+          oci setup repair-file-permissions --file ~/.oci/key.pem
+          echo "CLUSTER_ID=$(oci ce cluster list --compartment-id ${{ env.COMPARTMENT_OCID }} --lifecycle-state ACTIVE --all | python3 -c "import sys, json; print(json.dumps([x for x in json.load(sys.stdin)['data'] if x['name'] == '${{ env.K8S_CLUSTER_NAME }}']))"| jq '.[0].id')" >> $GITHUB_ENV
       - name: 'Get OCI autonomous database ID'
         run: |
           oci setup repair-file-permissions --file ~/.oci/config
