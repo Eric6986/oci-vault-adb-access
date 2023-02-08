@@ -1,0 +1,125 @@
+name: CI/CD
+on:
+  push:
+    branches:
+      - 'master'
+      - 'develop'
+      - 'feature/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      REGION                   : ap-singapore-1
+      COMPARTMENT_NAME         : development-demo
+      APP_PREFIX               : device-api
+      APP_NAMESPACE            : dev
+      APP_REPLICAS             : 3
+      ADB_NAME                 : Thetest
+      VAULT_USER_NAME          : adb-username
+      VAULT_PWD_NAME           : adb-password
+      DOCKER_URL               : sin.ocir.io
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          install: true
+      - name: 'Install OCI CLI'
+        run: |
+          mkdir ~/.oci
+          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/key.pem
+          curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
+          chmod +x install.sh
+          ./install.sh --accept-all-defaults
+          echo "/home/runner/bin" >> $GITHUB_PATH
+          exec -l $SHELL
+      - name: 'Get OCI compartment resource ID'
+        run: |
+          oci setup repair-file-permissions --file ~/.oci/config
+          oci setup repair-file-permissions --file ~/.oci/key.pem
+          echo "COMPARTMENT_OCID=$(oci iam compartment list | python3 -c "import sys, json; print(json.dumps([x for x in json.load(sys.stdin)['data'] if x['name'] == '${{ env.COMPARTMENT_NAME }}']))"| jq '.[0].id')" >> $GITHUB_ENV
+      - name: 'Get OCI autonomous database ID'
+        run: |
+          oci setup repair-file-permissions --file ~/.oci/config
+          oci setup repair-file-permissions --file ~/.oci/key.pem
+          echo "ADB_OCID=$(oci db autonomous-database list --compartment-id ${{ env.COMPARTMENT_OCID }} | python3 -c "import sys, json; print(json.dumps([x for x in json.load(sys.stdin)['data'] if x['db-name'] == 'developmentdemo']))" | jq '.[0].id')" >> $GITHUB_ENV
+      - name: 'Get service vault OCID'
+        run: |
+          oci setup repair-file-permissions --file ~/.oci/config
+          oci setup repair-file-permissions --file ~/.oci/key.pem
+          echo "ADB_USERNAME_OCID=$(oci vault secret list --compartment-id ${{ env.COMPARTMENT_OCID }} --name ${{ env.VAULT_USER_NAME }} | jq '.data | .[0].id')" >> $GITHUB_ENV
+          echo "ADB_PASSWORD_OCID=$(oci vault secret list --compartment-id ${{ env.COMPARTMENT_OCID }} --name ${{ env.VAULT_PWD_NAME }} | jq '.data | .[0].id')" >> $GITHUB_ENV
+      - name: 'Get OCI docker namespace'
+        run: |
+          echo "DOCKER_NAMESPACE=$(oci os ns get | jq '.data')" >> $GITHUB_ENV
+      - name: 'Install kubectl'
+        run: |
+          mkdir /tmp/.kube
+          curl -L -O "https://dl.k8s.io/release/v1.22.4/bin/linux/amd64/kubectl" -o kubectl
+          chmod +x kubectl
+          mv kubectl /usr/local/bin
+          oci ce cluster create-kubeconfig --cluster-id ${{ env.CLUSTER_ID }} --file /tmp/.kube/config --region ${{ env.REGION }} --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+          echo "KUBECONFIG=/tmp/.kube/config" >> $GITHUB_ENV
+      - name: 'Get running k8s services'
+        run: kubectl get ns
+      - name: 'Set up JDK 11 and maven'
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+      - name: 'Build with Maven'
+        run: |
+          cd ${{ env.APP_PREFIX }} && mvn clean package -Dmaven.test.skip=true
+      - name: 'Login to Docker registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.DOCKER_URL }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: 'Available platforms'
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: 'Download the ADB Wallet'
+        run: |
+          oci db autonomous-database generate-wallet --autonomous-database-id ${{ env.ADB_OCID }} --file /tmp/wallet.zip --password ${{ secrets.ADB_WALLET_PASSWORD }}
+          unzip -o "/tmp/wallet.zip" -d "/tmp/wallet"
+      - name: 'Create new kubernetes config'
+        run: |
+          # CREATE NAMESPACES
+          kubectl create namespace ${{ env.APP_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+          # ADB WALLET SECRET
+          kubectl delete secret "${{ env.APP_PREFIX }}-wallet" --ignore-not-found=true -n ${{ env.APP_NAMESPACE }}
+          kubectl create secret generic "${{ env.APP_PREFIX }}-wallet" --from-file="/tmp/wallet/" -n ${{ env.APP_NAMESPACE }}
+
+          # OCIR SECRET
+          kubectl delete secret "${{ env.APP_PREFIX }}-registry" --ignore-not-found=true -n ${{ env.APP_NAMESPACE }}
+          kubectl create secret docker-registry "${{ env.APP_PREFIX }}-registry" --docker-server="${{ env.DOCKER_URL }}" --docker-username="${{ secrets.DOCKER_USERNAME }}" --docker-password="${{ secrets.DOCKER_PASSWORD }}" --docker-email="${{ secrets.DOCKER_EMAIL }}" -n ${{ env.APP_NAMESPACE }}
+
+          # Prepare sprint boot environment config
+          cat ./device-api/src/main/resources/application-template.yml | sed -e 's|{$APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|{$APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|{$ADB_NAME}|${{ env.ADB_NAME }}|g; s|{$ADB_USERNAME_OCID}|${{ env.ADB_USERNAME_OCID }}|g; s|{$ADB_PASSWORD_OCID}|${{ env.ADB_PASSWORD_OCID }}|g;' > ./device-api/src/main/resources/application-${{ env.APP_NAMESPACE }}.yml
+
+          # ATP CONFIG MAP
+          kubectl delete configmap "${{ env.APP_PREFIX }}-config" --ignore-not-found=true -n ${{ env.APP_NAMESPACE }}
+          kubectl create configmap "${{ env.APP_PREFIX }}-config" --from-file=./device-api/src/main/resources/application-${{ env.APP_NAMESPACE }}.yml -n ${{ env.APP_NAMESPACE }}
+          
+      - name: 'Build docker image and push to OCI container registry'
+        run: |
+          docker build --push --platform linux/amd64,linux/arm64 -t ${{ env.DOCKER_URL }}/${{ env.DOCKER_NAMESPACE }}/${{ env.APP_PREFIX }}:latest ${{ env.APP_PREFIX }}/.
+      - name: 'Deploy to OKE'
+        run: |
+          # DEPLOYMENT namespace, svc, deployment
+          cat ./device-api/k8s-deployment.yml | sed -e 's|{$APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|{$APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|{$APP_REPLICAS}|${{ env.APP_REPLICAS }}|g; s|{$DOCKER_URL}|${{ env.DOCKER_URL }}|g; s|{$DOCKER_NAMESPACE}|${{ env.DOCKER_NAMESPACE }}|g; s|{$PRIVATE_NODE_SUBNET_OCID}|${{ env.PRIVATE_NODE_SUBNET_OCID }}|g' | kubectl apply -f -
+          
+          kubectl get services -n ${{ env.APP_NAMESPACE }}
+          kubectl get pods -n ${{ env.APP_NAMESPACE }}
+      - name: 'Rollout restart the service'
+        run: |
+          # SERVICE RESTART
+          kubectl rollout restart deployment ${{ env.APP_PREFIX }}-deployment -n ${{ env.APP_NAMESPACE }}
+
