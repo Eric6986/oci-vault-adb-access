@@ -32,9 +32,9 @@ logging:
         device: DEBUG
 oci:
   tenant:
-    region: us-phoenix-1
-    adb-username-ocid: {$ADB_USERNAME_OCID}
-    adb-password-ocid: {$ADB_PASSWORD_OCID}
+    region: {$REGION}
+    adb-username-ocid: {$VAULT_ADB_USERNAME_OCID}
+    adb-password-ocid: {$VAULT_ADB_PASSWORD_OCID}
     stream-ocid: 
     message-endpoint: 
     topic-ocid:
