@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: default
+  application:
+    name: device-api
+  server:
+    port: 8080
+  datasource:
+    url: jdbc:oracle:thin:@thetest_high?TNS_ADMIN=/tmp/Wallet_developmentdemo
+    username:
+    password:
+  jpa:
+    database: oracle
+    hibernate:
+      naming_strategy: org.hibernate.cfg.ImprovedNamingStrategy
+      show-sql: true
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.Oracle12cDialect
+logging:
+  level:
+    com:
+      vs:
+        device: DEBUG
+oci:
+  tenant:
+    region: ap-singapore-1
+    adb-username-ocid: ocid1.vaultsecret.oc1.ap-singapore-1.amaaaaaahxv2vbyaqiiu6dbojoqtukeg4qtafwgy742mylfocisestouopna
+    adb-password-ocid: ocid1.vaultsecret.oc1.ap-singapore-1.amaaaaaahxv2vbyadu23bqy6pidfrtq3oz3szcnzyc5gonzzxh2jmdww7zgq
+    stream-ocid:
+    message-endpoint:
+    topic-ocid:
