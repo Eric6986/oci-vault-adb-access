@@ -83,7 +83,7 @@ metadata:
     service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
     service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
     service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
-    service.beta.kubernetes.io/oci-load-balancer-subnet1: {$PUBLIC_NODE_SUBNET_OCID}
+    service.beta.kubernetes.io/oci-load-balancer-subnet1: {$PUBLIC_SVC_SUBNET_OCID}
 spec:
   selector:
     app: {$APP_PREFIX}

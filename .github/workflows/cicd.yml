@@ -15,7 +15,7 @@ jobs:
       APP_PREFIX               : device-api
       APP_NAMESPACE            : dev
       APP_REPLICAS             : 3
-      PUBLIC_NODE_SUBNET_NAME  : oke-vcn-quick-k8s-cluster-demo-dev-cada2b3a5
+      PUBLIC_SVC_SUBNET_NAME   : oke-svclbsubnet-quick-k8s-cluster-demo-dev-cada2b3a5-regional
       ADB_NAME                 : thetest
       VAULT_USER_NAME          : adb-username
       VAULT_PWD_NAME           : adb-password
@@ -55,11 +55,11 @@ jobs:
           oci setup repair-file-permissions --file ~/.oci/config
           oci setup repair-file-permissions --file ~/.oci/key.pem
           echo "ADB_OCID=$(oci db autonomous-database list --compartment-id ${{ env.COMPARTMENT_OCID }} | python3 -c "import sys, json; print(json.dumps([x for x in json.load(sys.stdin)['data'] if x['db-name'] == 'developmentdemo']))" | jq '.[0].id')" >> $GITHUB_ENV
-      - name: 'Get OCI private subnet OCID'
+      - name: 'Get OCI Public subnet OCID'
         run: |
           oci setup repair-file-permissions --file ~/.oci/config
           oci setup repair-file-permissions --file ~/.oci/key.pem
-          echo "PUBLIC_NODE_SUBNET_OCID=$(oci network subnet list --compartment-id ${{ env.COMPARTMENT_OCID }} --display-name ${{ env.PUBLIC_NODE_SUBNET_OCID }} | jq '.data | .[0].id')" >> $GITHUB_ENV
+          echo "PUBLIC_SVC_SUBNET_OCID=$(oci network subnet list --compartment-id ${{ env.COMPARTMENT_OCID }} --display-name ${{ env.PUBLIC_SVC_SUBNET_NAME }} | jq '.data | .[0].id')" >> $GITHUB_ENV
       - name: 'Get service vault OCID'
         run: |
           oci setup repair-file-permissions --file ~/.oci/config
@@ -126,7 +126,7 @@ jobs:
       - name: 'Deploy to OKE'
         run: |
           # DEPLOYMENT namespace, svc, deployment
-          cat ./k8s-deployment-template.yml | sed -e 's|{$APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|{$APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|{$APP_REPLICAS}|${{ env.APP_REPLICAS }}|g; s|{$DOCKER_URL}|${{ env.DOCKER_URL }}|g; s|{$DOCKER_NAMESPACE}|${{ env.DOCKER_NAMESPACE }}|g; s|{$PUBLIC_NODE_SUBNET_OCID}|${{ env.PUBLIC_NODE_SUBNET_OCID }}|g' | kubectl apply -f -
+          cat ./k8s-deployment-template.yml | sed -e 's|{$APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|{$APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|{$APP_REPLICAS}|${{ env.APP_REPLICAS }}|g; s|{$DOCKER_URL}|${{ env.DOCKER_URL }}|g; s|{$DOCKER_NAMESPACE}|${{ env.DOCKER_NAMESPACE }}|g; s|{$PUBLIC_SVC_SUBNET_OCID}|${{ env.PUBLIC_SVC_SUBNET_OCID }}|g' | kubectl apply -f -
           
           kubectl get services -n ${{ env.APP_NAMESPACE }}
           kubectl get pods -n ${{ env.APP_NAMESPACE }}
