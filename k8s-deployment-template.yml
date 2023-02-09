@@ -44,7 +44,7 @@ spec:
           httpGet:
             path: /actuator/health/liveness
             port: 8080
-          initialDelaySeconds: 30
+          initialDelaySeconds: 90
           timeoutSeconds: 2
           periodSeconds: 3
           failureThreshold: 3
@@ -52,7 +52,7 @@ spec:
           httpGet:
             path: /actuator/health/readiness
             port: 8080
-          initialDelaySeconds: 30
+          initialDelaySeconds: 90
           timeoutSeconds: 2
           periodSeconds: 3
           failureThreshold: 2
@@ -79,7 +79,7 @@ metadata:
   namespace: {$APP_NAMESPACE}
   annotations:
     oci.oraclecloud.com/load-balancer-type: "lb"
-    service.beta.kubernetes.io/oci-load-balancer-internal: "true"
+    service.beta.kubernetes.io/oci-load-balancer-internal: "false"
     service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
     service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
     service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
