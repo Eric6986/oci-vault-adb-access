@@ -114,7 +114,7 @@ jobs:
           kubectl create secret docker-registry "${{ env.APP_PREFIX }}-registry" --docker-server="${{ env.DOCKER_URL }}" --docker-username="${{ secrets.DOCKER_USERNAME }}" --docker-password="${{ secrets.DOCKER_PASSWORD }}" --docker-email="${{ secrets.DOCKER_EMAIL }}" -n ${{ env.APP_NAMESPACE }}
 
           # Prepare sprint boot environment config
-          cat ./src/main/resources/application-template.yml | sed -e 's|{$APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|{$APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|{$ADB_NAME}|${{ env.ADB_NAME }}|g; s|{$VAULT_ADB_USERNAME_OCID}|${{ env.VAULT_ADB_USERNAME_OCID }}|g; s|{$VAULT_ADB_PASSWORD_OCID}|${{ env.VAULT_ADB_PASSWORD_OCID }}|g; s|{$REGION}|${{ env.REGION }}|g;' > ./src/main/resources/application-${{ env.APP_NAMESPACE }}.yml
+          cat ./src/main/resources/application-template.yml | sed -e 's|${APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|${APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|${ADB_NAME}|${{ env.ADB_NAME }}|g; s|${VAULT_ADB_USERNAME_OCID}|${{ env.VAULT_ADB_USERNAME_OCID }}|g; s|${VAULT_ADB_PASSWORD_OCID}|${{ env.VAULT_ADB_PASSWORD_OCID }}|g; s|${REGION}|${{ env.REGION }}|g;' > ./src/main/resources/application-${{ env.APP_NAMESPACE }}.yml
 
           # ATP CONFIG MAP
           kubectl delete configmap "${{ env.APP_PREFIX }}-config" --ignore-not-found=true -n ${{ env.APP_NAMESPACE }}
@@ -126,7 +126,7 @@ jobs:
       - name: 'Deploy to OKE'
         run: |
           # DEPLOYMENT namespace, svc, deployment
-          cat ./k8s-deployment-template.yml | sed -e 's|{$APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|{$APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|{$APP_REPLICAS}|${{ env.APP_REPLICAS }}|g; s|{$DOCKER_URL}|${{ env.DOCKER_URL }}|g; s|{$DOCKER_NAMESPACE}|${{ env.DOCKER_NAMESPACE }}|g; s|{$PUBLIC_SVC_SUBNET_OCID}|${{ env.PUBLIC_SVC_SUBNET_OCID }}|g' | kubectl apply -f -
+          cat ./k8s-deployment-template.yml | sed -e 's|${APP_PREFIX}|${{ env.APP_PREFIX }}|g; s|${APP_NAMESPACE}|${{ env.APP_NAMESPACE }}|g; s|${APP_REPLICAS}|${{ env.APP_REPLICAS }}|g; s|${DOCKER_URL}|${{ env.DOCKER_URL }}|g; s|${DOCKER_NAMESPACE}|${{ env.DOCKER_NAMESPACE }}|g; s|${PUBLIC_SVC_SUBNET_OCID}|${{ env.PUBLIC_SVC_SUBNET_OCID }}|g' | kubectl apply -f -
           
           kubectl get services -n ${{ env.APP_NAMESPACE }}
           kubectl get pods -n ${{ env.APP_NAMESPACE }}
