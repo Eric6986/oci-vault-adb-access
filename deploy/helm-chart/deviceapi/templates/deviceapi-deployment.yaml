@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deviceapi.fullname" . }}
+  labels: {{ include "deviceapi.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      app.kubernetes.io/name: {{ include "deviceapi.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        version: {{ .Values.image.tag | quote }}
+        app.kubernetes.io/name: {{ include "deviceapi.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        mockmode: {{ .Values.global.mock.service | quote }}
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "80"
+    spec:
+      initContainers:
+        {{- include "deviceapi.init.wallet" . | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 5
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.env.springProfilesActive }}
+            - name: SPRING_CONFIG_LOCATION
+              value: {{ .Values.env.springConfigLocation }}
+            - name: JAVA_OPTS
+              value: {{ .Values.env.javaOpts }}
+            {{- include "deviceapi.oadb.connection" . | nindent 12 }}
+          volumeMounts:
+            - name: deviceapi-config
+              mountPath: /config
+              readOnly: true
+            - mountPath: /tmp
+              name: tmp-volume
+            {{- include "deviceapi.mount.wallet" . | nindent 12 }}
+      volumes:
+        - name: deviceapi-config
+          configMap:
+            name: deviceapi-config
+        - name: tmp-volume
+          emptyDir:
+            medium: Memory
+        {{- include "deviceapi.volumes" . | nindent 8 }}
+      nodeSelector:
+          kubernetes.io/os: linux

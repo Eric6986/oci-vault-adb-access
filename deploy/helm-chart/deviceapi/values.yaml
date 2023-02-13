@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: iad.ocir.io/oracle/ateam/mushop-orders
+  tag: 2.2.2
+  pullPolicy: IfNotPresent
+
+dbtools:
+  repository: iad.ocir.io/oracle/ateam/mushop-dbtools
+  tag: 1.0.1
+  pullPolicy: IfNotPresent
+
+osb: {}
+
+secrets:
+  oadbService:
+  oadbUser:
+  oadbPassword:
+  oadbWalletPassword:
+
+env:
+  javaOpts: -Xms32m -Xmx150m -XX:MaxRAM=150m -Djava.security.egd=file:/dev/urandom -Doracle.jdbc.fanEnabled=false -XX:+UnlockExperimentalVMOptions -XX:+UseZGC
+  springProfilesActive: dev
+  springConfigLocation: /config/
+service:
+  port: 80
