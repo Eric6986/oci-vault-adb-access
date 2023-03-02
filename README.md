@@ -122,6 +122,16 @@ Modify the configuration setting in oci.tenant.adb-username-ocid for your ADB co
 ...
 ```
 
+### STEP 6.1
+
+If you deploy the application to OKE, you need to create a dynamic group to define what instance have the permission to call vault service.
+And you need a policy to define what service will be invoked by this instance. For example, Vault service.
+![](jpeg/Step61A.png)
+![](jpeg/Step61B.png)
+![](jpeg/Step61C.png)
+![](jpeg/Step61D.png)
+![](jpeg/Step61E.png)
+
 ### STEP 7
 
 Start your sprint boot project, then you will see the application to retrieve the secret from OCI Vault service.

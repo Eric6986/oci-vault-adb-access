@@ -2,4 +2,4 @@ apiVersion: v1
 name: deviceapi
 appVersion: 0.1.0
 version: 0.1.0
-description: Helm chart for deviceapi component of the MuShop
+description: Helm chart for deviceapi component

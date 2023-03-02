@@ -74,6 +74,16 @@ data "oci_containerengine_cluster_kube_config" "oke_cluster_kube_config" {
 #  depends_on = [oci_devops_build_run.test_build_run_1]
 #
 #}
+resource "random_string" "adb_wallet_password" {
+  length           = 16
+  special          = true
+  min_upper        = 3
+  min_lower        = 3
+  min_numeric      = 3
+  min_special      = 3
+  override_special = "{}#^*<>[]%~"
+}
+
 
 resource "random_string" "adb_admin_password" {
   length           = 16

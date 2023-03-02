@@ -13,8 +13,8 @@ variable "cluster_name" {
   description = "Application name. Will be used as prefix to identify resources, such as OKE, VCN, DevOps, and others"
 }
 
-variable "oci_username" {}
-variable "oci_user_authtoken" {}
+#variable "oci_username" {}
+#variable "oci_user_authtoken" {}
 
 variable "release" {
   description = "Reference Architecture Release (OCI Architecture Center)"
@@ -57,4 +57,19 @@ variable adb_db_workload {
 variable adb_display_name {
   default = "ocivaultdemo"
   description = "Autonomous database display name"
+}
+
+## Secrets
+variable "db_admin_name" {
+  default = "oadb-admin"
+}
+variable "db_connection_name" {
+  default = "oadb-connection"
+}
+variable "db_wallet_name" {
+  default = "oadb-wallet"
+}
+
+variable "adb_wallet_generate_type" {
+  default = "SINGLE"
 }

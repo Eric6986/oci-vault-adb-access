@@ -84,10 +84,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.oracle.oci.sdk</groupId>
-			<artifactId>oci-java-sdk-vault</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.oracle.oci.sdk</groupId>
 			<artifactId>oci-java-sdk-common</artifactId>
 		</dependency>
 		<dependency>

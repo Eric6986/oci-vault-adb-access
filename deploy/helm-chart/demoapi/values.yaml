@@ -1,0 +1,16 @@
+global:
+  mock:
+    service: "false"
+  osb:
+    instanceName: demoapi
+  ociAuthSecret:
+  ossStreamSecret:
+  oadbAdminSecret:
+  oadbWalletSecret:
+  oadbConnectionSecret:
+  oosBucketSecret:
+
+# Depending on the scenario, certain resources might need to be skipped.
+# For example, --set tags.streaming=false to disable required streaming manifests
+deviceapi:
+  enabled: true

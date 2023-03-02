@@ -1,12 +1,12 @@
 replicaCount: 1
 
 image:
-  repository: iad.ocir.io/oracle/ateam/mushop-orders
+  repository: iad.ocir.io/oracle/deviceapi-orders
   tag: 2.2.2
   pullPolicy: IfNotPresent
 
 dbtools:
-  repository: iad.ocir.io/oracle/ateam/mushop-dbtools
+  repository: iad.ocir.io/oracle/deviceapi-dbtools
   tag: 1.0.1
   pullPolicy: IfNotPresent
 
