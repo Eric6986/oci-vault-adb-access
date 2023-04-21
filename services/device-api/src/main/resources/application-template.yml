@@ -1,0 +1,40 @@
+spring:
+  config:
+    activate:
+      on-profile: {$APP_NAMESPACE}
+  application:
+    name: {$APP_PREFIX}
+  server:
+    port: 8080
+  management:
+    endpoint:
+      web:
+        exposure:
+          include: "health"
+      enabled-by-default: true
+  datasource:
+    url: jdbc:oracle:thin:@{$ADB_NAME}_high?TNS_ADMIN=/Wallet
+    username:
+    password:
+  jpa:
+    database: oracle
+    hibernate:
+      naming_strategy: org.hibernate.cfg.ImprovedNamingStrategy
+      show-sql: true
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.Oracle12cDialect
+logging:
+  level:
+    com:
+      vs:
+        device: DEBUG
+oci:
+  tenant:
+    region: {$REGION}
+    adb-username-ocid: {$VAULT_ADB_USERNAME_OCID}
+    adb-password-ocid: {$VAULT_ADB_PASSWORD_OCID}
+    stream-ocid: 
+    message-endpoint: 
+    topic-ocid:

@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${APP_NAMESPACE}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_PREFIX}-deployment
+  namespace: ${APP_NAMESPACE}
+spec:
+  replicas: ${APP_REPLICAS}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: ${APP_PREFIX}
+  template:
+    metadata:
+      labels:
+        app: ${APP_PREFIX}
+    spec:
+      containers:
+      - name: ${APP_PREFIX}
+        imagePullPolicy: Always
+        image: ${DOCKER_URL}/${DOCKER_NAMESPACE}/${APP_PREFIX}:latest
+        env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: ${APP_NAMESPACE}
+          - name: SPRING_CONFIG_LOCATION
+            value: /config/
+        volumeMounts:
+          - mountPath: /Wallet
+            name: ${APP_PREFIX}-wallet
+            readOnly: true
+          - name: ${APP_PREFIX}-config
+            mountPath: /config
+            readOnly: true
+        ports:
+          - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 90
+          timeoutSeconds: 2
+          periodSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 90
+          timeoutSeconds: 2
+          periodSeconds: 3
+          failureThreshold: 2
+        lifecycle:
+          preStop:
+            exec:
+              command: [ "sh", "-c", "sleep 10" ]
+      imagePullSecrets:
+        - name: ${APP_PREFIX}-registry
+      volumes:
+        - name: ${APP_PREFIX}-wallet
+          secret:
+              secretName: ${APP_PREFIX}-wallet
+        - name: ${APP_PREFIX}-config
+          configMap:
+            name: ${APP_PREFIX}-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${APP_PREFIX}-service
+  namespace: ${APP_NAMESPACE}
+  annotations:
+    oci.oraclecloud.com/load-balancer-type: "lb"
+    service.beta.kubernetes.io/oci-load-balancer-internal: "false"
+    service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+    service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+    service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+    service.beta.kubernetes.io/oci-load-balancer-subnet1: ${PUBLIC_SVC_SUBNET_OCID}
+spec:
+  selector:
+    app: ${APP_PREFIX}
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  externalTrafficPolicy: Cluster
+  sessionAffinity: None

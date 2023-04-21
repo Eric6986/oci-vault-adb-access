@@ -1,0 +1,28 @@
+# Depending on the scenario, certain resources might need to be skipped.
+# For example, --set tags.streaming=false to disable required streaming manifests
+global:
+  #ociAuthSecret: oci-credentials        # OCI authentication credentials secret name
+  #ossStreamSecret: oss-connection       # Previously created streaming secret name
+  oadbAdminSecret: oadb-admin            # Name of DB Admin secret created separately
+  oadbWalletSecret: oadb-wallet          # Name of wallet secret created separately
+  oadbConnectionSecret: oadb-connection  # Name of connection secret created separately
+  #oosBucketSecret: oos-bucket           # Object storage bucket secret name (optional)
+
+deviceapi:
+  enabled: false
+
+
+ingress:
+  enabled: false
+  #hosts:
+  #  - www.mydemoapp.com
+
+  # This controls the cluster issuer what's used in Ingress
+  #clusterIssuer: letsencrypt-prod
+
+  # Used for ACME registration (if TLS is set)
+  #email: "no-reply@mydemoapp.com"
+
+  # If TLS is provided, cert-manager needs to be installed.
+  #tls: true
+

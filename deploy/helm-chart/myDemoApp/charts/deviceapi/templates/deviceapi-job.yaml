@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "deviceapi.fullname" . }}-init-{{ .Release.Revision }}
+  labels: {{ include "deviceapi.labels" . | nindent 4 }}
+spec:
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app.kubernetes.io/name: {{ include "deviceapi.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      initContainers:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      containers:
+        - name: init
+          image: "{{ .Values.dbtools.repository }}:{{ .Values.dbtools.tag }}"
+          imagePullPolicy: {{ .Values.dbtools.pullPolicy }}
+          command: ["/bin/sh","-c"]
+          args:
+            - sqlplus ADMIN/\"${OADB_ADMIN_PW}\"@${OADB_SERVICE} @service.sql ${OADB_USER^^} ${OADB_PW}
+          env:
+            {{- include "deviceapi.oadb.connection" . | nindent 12 }}
+            {{- include "deviceapi.oadb.admin" . | nindent 12 }}
+          volumeMounts:
+            {{- include "deviceapi.mount.init.wallet" . | nindent 12 }}
+            {{- include "deviceapi.mount.initdb" . | nindent 12 }}
+      volumes: {{- include "deviceapi.init.volumes" . | nindent 8 }}
