@@ -18,6 +18,7 @@ spec:
         {{- include "deviceapi.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "deviceapi.serviceAccountName" . }}
+      automountServiceAccountToken: true
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       imagePullSecrets:
