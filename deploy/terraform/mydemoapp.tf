@@ -8,7 +8,7 @@ resource "kubernetes_namespace" "mydemoapp_namespace" {
     name = "mydemoapp-dev"
   }
   
-  depends_on = [module.oci-oke.oci_oke_node_pool]
+  depends_on = [oci_containerengine_node_pool.oke_node_pool]
 }
 
 # Deploy myDemoApp chart

@@ -2,8 +2,10 @@ package com.demo.device.oci;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.InstancePrincipalsAuthenticationDetailsProvider;
+import com.oracle.bmc.auth.okeworkloadidentity.OkeWorkloadIdentityAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
 import com.oracle.bmc.identity.IdentityClient;
+import com.oracle.bmc.secrets.Secrets;
 import com.oracle.bmc.secrets.SecretsClient;
 import com.oracle.bmc.secrets.model.Base64SecretBundleContentDetails;
 import com.oracle.bmc.secrets.requests.GetSecretBundleRequest;
@@ -51,7 +53,7 @@ public class OciHelperBean {
 
     private BasicAuthenticationDetailsProvider provider = null;
 
-    private IdentityClient identityClient = null;
+    private OkeWorkloadIdentityAuthenticationDetailsProvider provider_workload = null;
 
     public OciHelperBean() {
     }
@@ -70,8 +72,9 @@ public class OciHelperBean {
             if("default".equals(config)) {
                 provider = new ConfigFileAuthenticationDetailsProvider("~/.oci/config", "DEFAULT");
             } else {
-                provider  = InstancePrincipalsAuthenticationDetailsProvider.builder().build();
-                identityClient = new IdentityClient(provider);
+                provider_workload = new OkeWorkloadIdentityAuthenticationDetailsProvider
+                        .OkeWorkloadIdentityAuthenticationDetailsProviderBuilder()
+                        .build();
            }
         } catch (Exception e) {
              System.out.println("Unable to connect to OCI");
@@ -80,35 +83,47 @@ public class OciHelperBean {
 
     public String getSecretValue(String secretOcid) {
         initProvider();
-        if(provider == null) return null;
 
-        SecretsClient secretsClient = new SecretsClient(provider);
-        secretsClient.setRegion(ociRegion);
 
-        // create get secret bundle request
-        GetSecretBundleRequest getSecretBundleRequest = GetSecretBundleRequest
-                .builder()
-                .secretId(secretOcid)
-                .stage(GetSecretBundleRequest.Stage.Current)
-                .build();
+        if("default".equals(config)) {
 
-        // get the secret
-        GetSecretBundleResponse getSecretBundleResponse = secretsClient.
-                getSecretBundle(getSecretBundleRequest);
+            if (provider == null) return null;
 
-        // get the bundle content details
-        Base64SecretBundleContentDetails base64SecretBundleContentDetails =
-                (Base64SecretBundleContentDetails) getSecretBundleResponse.
-                        getSecretBundle().getSecretBundleContent();
+            SecretsClient secretsClient = new SecretsClient(provider);
+            secretsClient.setRegion(ociRegion);
 
-        // decode the encoded secret
-        byte[] secretValueDecoded = Base64.decodeBase64(base64SecretBundleContentDetails.getContent());
+            // create get secret bundle request
+            GetSecretBundleRequest getSecretBundleRequest = GetSecretBundleRequest
+                    .builder()
+                    .secretId(secretOcid)
+                    .stage(GetSecretBundleRequest.Stage.Current)
+                    .build();
 
-        if (identityClient != null) {
-            identityClient.close();
+            // get the secret
+            GetSecretBundleResponse getSecretBundleResponse = secretsClient.
+                    getSecretBundle(getSecretBundleRequest);
+
+            // get the bundle content details
+            Base64SecretBundleContentDetails base64SecretBundleContentDetails =
+                    (Base64SecretBundleContentDetails) getSecretBundleResponse.
+                            getSecretBundle().getSecretBundleContent();
+
+            // decode the encoded secret
+            byte[] secretValueDecoded = Base64.decodeBase64(base64SecretBundleContentDetails.getContent());
+
+            return new String(secretValueDecoded);
+        } else {
+
+            if (provider_workload == null) return null;
+            Secrets client = SecretsClient.builder().region(ociRegion).build(provider_workload);
+            GetSecretBundleResponse secretsResponse = client.getSecretBundle(GetSecretBundleRequest.builder().secretId(secretOcid).build());
+            Base64SecretBundleContentDetails base64SecretBundleContentDetails =
+                    (Base64SecretBundleContentDetails) secretsResponse.getSecretBundle().getSecretBundleContent();
+
+            // decode the encoded secret
+            byte[] secretValueDecoded = Base64.decodeBase64(base64SecretBundleContentDetails.getContent());
+            return new String(secretValueDecoded);
         }
-
-        return new String(secretValueDecoded);
     }
 
     public void produceMessage(String key, String value) {
@@ -144,10 +159,6 @@ public class OciHelperBean {
                                 entry.getOffset()));
             }
         }
-        if (identityClient != null) {
-            identityClient.close();
-        }
-
     }
 
     public void sendNotification(String title, String body) {
@@ -166,9 +177,6 @@ public class OciHelperBean {
 
         client.publishMessage( publishMessageRequest );
 
-        if (identityClient != null) {
-            identityClient.close();
-        }
     }
 }
 

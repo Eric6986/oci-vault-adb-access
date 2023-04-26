@@ -54,8 +54,8 @@ locals {
     "Allow dynamic-group ${local.oke_nodes_dg} to read log-content in compartment id ${var.compartment_ocid}"
   ]
   allow_oke_use_oci_vault_keys_statements = [
-    "Allow dynamic-group ${local.oke_nodes_dg} use vaults in compartment id ${var.compartment_ocid}",
-    "Allow dynamic-group ${local.oke_nodes_dg} use keys in compartment id ${var.compartment_ocid}",
-    "Allow dynamic-group ${local.oke_nodes_dg} use secret-family in compartment id ${var.compartment_ocid}"
+    "Allow any-user to use vaults in compartment id ${var.compartment_ocid} where all {request.principal.type = 'workload', request.principal.namespace = 'mydemoapp-dev', request.principal.service_account = 'mydemoapp-deviceapi', request.principal.cluster_id = '${oci_containerengine_cluster.oke_cluster.id}'}",
+    "Allow any-user to use keys in compartment id ${var.compartment_ocid} where all {request.principal.type = 'workload', request.principal.namespace = 'mydemoapp-dev', request.principal.service_account = 'mydemoapp-deviceapi', request.principal.cluster_id = '${oci_containerengine_cluster.oke_cluster.id}'}",
+    "Allow any-user to use secret-family in compartment id ${var.compartment_ocid} where all {request.principal.type = 'workload', request.principal.namespace = 'mydemoapp-dev', request.principal.service_account = 'mydemoapp-deviceapi', request.principal.cluster_id = '${oci_containerengine_cluster.oke_cluster.id}'}"
   ]
 }

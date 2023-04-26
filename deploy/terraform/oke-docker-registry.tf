@@ -20,5 +20,5 @@ resource "kubernetes_secret" "docker-registry" {
     })
   }
   type = "kubernetes.io/dockerconfigjson"
-  depends_on = [module.oci-oke.oci_oke_node_pool]
+  depends_on = [oci_containerengine_node_pool.oke_node_pool]
 }

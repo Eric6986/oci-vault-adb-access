@@ -7,7 +7,7 @@ resource "kubernetes_namespace" "cluster_utilities_namespace" {
   metadata {
     name = "mydemoapp-utilities"
   }
-  depends_on = [module.oci-oke.oci_oke_node_pool]
+  depends_on = [oci_containerengine_node_pool.oke_node_pool]
 }
 
 # mydemoapp Utilities helm charts
@@ -43,7 +43,7 @@ resource "helm_release" "ingress_nginx" {
   }
 
   timeout = 1800 # workaround to wait the node be active for other charts
-  depends_on = [module.oci-oke.oci_oke_node_pool]
+  depends_on = [oci_containerengine_node_pool.oke_node_pool]
 }
 
 ## https://github.com/jetstack/cert-manager/blob/master/README.md

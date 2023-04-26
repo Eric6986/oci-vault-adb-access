@@ -58,7 +58,7 @@ data "oci_core_services" "all_services" {
 
 # Gets kubeconfig
 data "oci_containerengine_cluster_kube_config" "oke_cluster_kube_config" {
-  cluster_id = var.create_new_oke_cluster ? module.oci-oke[0].cluster.id : var.existent_oke_cluster_id
+  cluster_id = oci_containerengine_cluster.oke_cluster.id
 }
 
 # Randoms
