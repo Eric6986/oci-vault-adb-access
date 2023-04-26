@@ -34,6 +34,7 @@ resource "oci_containerengine_cluster" "oke_cluster" {
     # }
   }
   kms_key_id = null
+  type = var.cluster_type
   defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
@@ -77,23 +78,7 @@ resource "oci_containerengine_node_pool" "oke_node_pool" {
   }
 
   defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Local kubeconfig for when using Terraform locally. Not used by Oracle Resource Manager
 resource "local_file" "kubeconfig" {

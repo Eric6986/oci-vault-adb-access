@@ -97,6 +97,10 @@ variable "public_ssh_key" {
   default     = ""
   description = "In order to access your private nodes with a public SSH key you will need to set up a bastion host (a.k.a. jump box). If using public nodes, bastion is not needed. Left blank to not import keys."
 }
+variable "cluster_type" {
+  default     = "ENHANCED_CLUSTER"
+  description = "The OKE cluster type."
+}
 
 # Network Details
 ## CIDRs

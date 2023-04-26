@@ -31,5 +31,4 @@ resource "oci_identity_tag" "ArchitectureCenterTag" {
   provisioner "local-exec" {
     command = "sleep 120"
   }
-
 }
