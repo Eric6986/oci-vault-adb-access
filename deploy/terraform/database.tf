@@ -12,7 +12,6 @@ resource "oci_database_autonomous_database" "adb_ocivaultdemo" {
   compartment_id                       = var.compartment_ocid
   cpu_core_count                       = var.adb_cpu_core_count
   data_safe_status                     = "NOT_REGISTERED"
-  data_storage_size_in_gb              = var.adb_data_storage_size_in_gb
   data_storage_size_in_tbs             = "1"
   database_edition                     = ""
   database_management_status           = ""

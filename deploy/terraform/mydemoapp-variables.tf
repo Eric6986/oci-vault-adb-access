@@ -35,11 +35,6 @@ variable adb_cpu_core_count {
   description = "Autonomous database CPU"
 }
 
-variable adb_data_storage_size_in_gb {
-  default = "1024"
-  description = "Autonomous database storage"
-}
-
 variable adb_db_version {
   default = "19c"
   description = "Autonomous database version"
