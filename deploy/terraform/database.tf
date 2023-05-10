@@ -31,7 +31,7 @@ resource "oci_database_autonomous_database" "adb_ocivaultdemo" {
   operations_insights_status           = "NOT_ENABLED"
   permission_level                     = "UNRESTRICTED"
   subnet_id                            = oci_core_subnet.oke_nodes_subnet.id
-  defined_tags                         = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  #defined_tags                         = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 ### Wallet

@@ -6,6 +6,12 @@ data "oci_identity_availability_domains" "ADs" {
   compartment_id = var.tenancy_ocid
 }
 
+# get the fault domains of the availability domain
+data "oci_identity_fault_domains" "fd" {
+  compartment_id    = var.compartment_ocid
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
+}
+
 # Gets home and current regions
 data "oci_identity_tenancy" "tenant_details" {
   tenancy_id = var.tenancy_ocid

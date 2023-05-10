@@ -70,6 +70,11 @@ variable "node_pool_shape" {
   default     = "VM.Standard.E4.Flex"
   description = "A shape is a template that determines the number of OCPUs, amount of memory, and other resources allocated to a newly created instance for the Worker Node"
 }
+# Shape of Virtual Nodes
+variable "node_pod_shape"{
+    type = string
+    default = "Pod.Standard.E4.Flex"
+}
 variable "node_pool_node_shape_config_ocpus" {
   default     = "1" # Only used if flex shape is selected
   description = "You can customize the number of OCPUs to a flexible shape"
